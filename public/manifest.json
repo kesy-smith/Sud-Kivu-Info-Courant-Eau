@@ -1,0 +1,17 @@
+{
+  "name": "Info Sud-Kivu: Eau & Électricité",
+  "short_name": "Info SK",
+  "description": "Signalement en temps réel de l'eau et électricité au Sud-Kivu.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3105/3105807.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

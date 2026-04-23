@@ -1,0 +1,47 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helpers
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isVerifiedUser() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function isAdmin() { return isVerifiedUser() && request.auth.token.email == "kesyeddy0@gmail.com"; }
+
+    // Report Validation Blueprint
+    function isValidReport(data) {
+      return data.keys().hasAll(['type', 'status', 'location', 'timestamp', 'userId']) &&
+             data.keys().size() >= 5 && data.keys().size() <= 6 &&
+             data.type in ['water', 'electricity'] &&
+             data.status in ['cut', 'restored'] &&
+             data.location is string && data.location.size() <= 100 &&
+             data.timestamp is number && data.timestamp <= (request.time.toMillis() + 300000) &&
+             data.userId == request.auth.uid &&
+             (!('comment' in data) || (data.comment is string && data.comment.size() <= 500));
+    }
+
+    match /reports/{reportId} {
+      allow read: if true; // Publicly viewable
+      
+      allow create: if isVerifiedUser() && 
+                    isValidId(reportId) && 
+                    isValidReport(incoming());
+      
+      allow update: if false; // Reports are immutable for now
+      
+      allow delete: if isAdmin() || (isSignedIn() && existing().userId == request.auth.uid);
+    }
+    
+    // Testing collection
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}
